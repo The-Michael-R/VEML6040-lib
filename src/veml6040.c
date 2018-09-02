@@ -1,5 +1,5 @@
 /**
-* Configures and collect the results of teh VEML6040
+* Configures and collect the results of the VEML6040
 **/
 
 #define DEBUG
@@ -118,6 +118,9 @@ int main(int arcc, char **argv) {
   uint8_t color;
   uint8_t temp;
 
+  time_t now;
+  struct tm *datetime;
+
   ret_val = veml6040_init();
 
   /*get initial exposure time, sequential all channels */
@@ -145,30 +148,11 @@ int main(int arcc, char **argv) {
     color_val[color] = value;
   }
 
+  time(&now);
+  datetime = localtime(&now);
+  printf("%02i:%02i:%02i %02i.%02i.%04i\n", datetime->tm_hour, datetime->tm_min, datetime->tm_sec, datetime->tm_mday, datetime->tm_mon, datetime->tm_year + 1900);
   printf("Initial Gain values: R:     %d, G:     %d, B:     %d, W:     %d\n", gain[0], gain[1], gain[2], gain[3]);
   printf("initial luminosity:  R:0x%04x, G:0x%04x, B:0x%04x, W:0x%04x\n", color_val[0], color_val[1], color_val[2], color_val[3]);
 
 return 0;
-//  i2c_write_byte(VEML6040_OFFSET_CONF, 0x50 + VEML6040_CONF_AF + VEML6040_CONF_TRIG);
-//  sleep(2);
-//  i2c_read(VEML6040_OFFSET_R_DATA, &nvalue);
-//  printf("R_Value = %04x\n", nvalue);
-//
-//  i2c_write_byte(VEML6040_OFFSET_CONF, 0x40 + VEML6040_CONF_AF + VEML6040_CONF_TRIG);
-//  sleep(1);
-//  i2c_read(VEML6040_OFFSET_R_DATA, &nvalue);
-//  printf("R_Value = %04x\n", nvalue);
-//
-//  return ret_val;
-//
-//  while(1) {
-//    i2c_read(VEML6040_OFFSET_R_DATA, &nvalue);
-//    printf("R_Value = %04x", nvalue);
-//    i2c_read(VEML6040_OFFSET_G_DATA, &nvalue);
-//    printf(" | G_Value = %04x", nvalue);
-//    i2c_read(VEML6040_OFFSET_B_DATA, &nvalue);
-//    printf(" | B_Value = %04x\n", nvalue);
-//  }
-//
-//  return ret_val;
 }
