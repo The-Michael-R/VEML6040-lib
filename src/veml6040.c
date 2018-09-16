@@ -10,6 +10,7 @@
 #include <linux/i2c.h>
 #include <linux/i2c-dev.h>
 #include <unistd.h>
+#include <pthread.h>
 #include "veml6040.h"
 #include "global_conf.h"
 #include "error_codes.h"
@@ -20,7 +21,6 @@
 * Private stuff
 **/
 int i2c_file_handle;
-
 
 
 int veml6040_init() {
@@ -94,65 +94,72 @@ ERROR_CODE_T i2c_write_byte(const uint8_t addr, const uint8_t data) {
 }
 
 
-int8_t gain_calc(uint16_t value) {
-  uint8_t temp;
-  int8_t result = -1;
-
-  temp = (value & 0xf000) >> 12 | 1; /* | 1 to prevent 0 remaining in var -> inifinite loop in while */
-
-  while (temp < 0x0f) {
-    temp = temp << 1;
-    result++;
-  }
-
-  return result;
-}
-
-
-int main(int arcc, char **argv) {
-  ERROR_CODE_T ret_val;
-  uint16_t value;
-  uint8_t gain[4] = {3, 3, 3, 3};
+void sample_veml() {
+  uint8_t curr_gain;
   uint16_t color_val[4];
-  int8_t exp_change;
+  uint8_t  color_gain[4];
   uint8_t color;
-  uint8_t temp;
+  uint8_t channels_done;
+  uint16_t i;
 
   time_t now;
   struct tm *datetime;
 
-  ret_val = veml6040_init();
+  curr_gain = 0;
+  channels_done = 0;
+  for (color=0; color<4; color++) {
+    color_gain[color] = 5;
+  }
 
-  /*get initial exposure time, sequential all channels */
-  for (color = 0; color < 4; color++) {
-    exp_change = 1;
-    while (exp_change !=0 ) {
-      i2c_write_byte(VEML6040_OFFSET_CONF, (gain[color]<<8) + VEML6040_CONF_AF + VEML6040_CONF_TRIG);
-      usleep(40000 << gain[color]);
-      i2c_read(VEML6040_OFFSET_R_DATA + color, &value);
-      exp_change = gain_calc(value);
-      if ((gain[color] + exp_change) > 5) {
-        gain[color] = 5;
-        break;
-      } else if ((gain[color] + exp_change) < 0) {
-        gain[color] = 0;
-        break;
-      } else {
-        gain[color] +=exp_change;
+  do {
+    /* start converting */
+    i2c_write_byte(VEML6040_OFFSET_CONF, (curr_gain << VEML6040_CONF_IT) + (1 << VEML6040_CONF_AF) + (1 << VEML6040_CONF_TRIG));
+    usleep(40000 << curr_gain);
+    usleep(1000); /*add some additional time */
+
+    for (color = 0; color < 4; color++) {
+      if (color_gain[color] == 5) {
+        i2c_read(VEML6040_OFFSET_R_DATA + color, &color_val[color]);
+        if (color_val[color] > 0x3fff) {
+          color_gain[color] = curr_gain;
+          channels_done ++;
+        }
       }
     }
-
-    i2c_write_byte(VEML6040_OFFSET_CONF, (gain[color]<<4) + VEML6040_CONF_AF + VEML6040_CONF_TRIG);
-    usleep(40000 << gain[color]);
-    i2c_read(VEML6040_OFFSET_R_DATA + color, &value);
-    color_val[color] = value;
-  }
+    curr_gain++;
+    if (curr_gain > 5) {
+      break;
+    }
+  }  while (channels_done != 4);
 
   time(&now);
   datetime = localtime(&now);
-  printf("%02i:%02i:%02i %02i.%02i.%04i\n", datetime->tm_hour, datetime->tm_min, datetime->tm_sec, datetime->tm_mday, datetime->tm_mon, datetime->tm_year + 1900);
-  printf("Initial Gain values: R:     %d, G:     %d, B:     %d, W:     %d\n", gain[0], gain[1], gain[2], gain[3]);
-  printf("initial luminosity:  R:0x%04x, G:0x%04x, B:0x%04x, W:0x%04x\n", color_val[0], color_val[1], color_val[2], color_val[3]);
+  printf("\n%02i:%02i:%02i %02i.%02i.%04i", datetime->tm_hour, datetime->tm_min, datetime->tm_sec, datetime->tm_mday, datetime->tm_mon, datetime->tm_year + 1900);
+  for (color = 0; color < 4; color++) {
+    printf (", %01d, 0x%04x", color_gain[color], color_val[color]);
+  }
+}
 
-return 0;
+
+void *threadproc(void *arg)
+{
+    while(1)
+    {
+        sample_veml();
+        sleep(10);
+    }
+    return 0;
+}
+
+
+int main(int arcc, char **argv) {
+  pthread_t tid;
+  veml6040_init();
+
+  pthread_create(&tid, NULL, &threadproc, NULL);
+  while (pthread_join(tid,NULL)) {};
+
+  printf("\n");
+
+  return 0;
 }

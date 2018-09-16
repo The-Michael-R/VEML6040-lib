@@ -53,10 +53,11 @@
 * SD = 0 -> Normal operation
 * SD = 1 -> Shut Down mode
 **/
-#define VEML6040_CONF_IT   (8)
-#define VEML6040_CONF_TRIG (4)
-#define VEML6040_CONF_AF   (2)
-#define VEML6040_CONF_SD   (1)
+#define VEML6040_CONF_IT     (4)
+#define VEML6040_CONF_IT_MSK (111 << VEML6040_CONF_IT)
+#define VEML6040_CONF_TRIG   (2)
+#define VEML6040_CONF_AF     (1)
+#define VEML6040_CONF_SD     (0)
 
 
 #endif /* VEML6040_h */
