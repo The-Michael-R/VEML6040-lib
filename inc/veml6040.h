@@ -68,8 +68,8 @@
 /**
 * Public functions
 **/
-int veml6040_init(); /* initializes the i2c and teh veml6040 */
+ERROR_CODE_T veml6040_init(void); /* initializes the i2c and teh veml6040 */
 ERROR_CODE_T sample_veml(uint32_t *raw_rgbw); /* reading all channels */
-void convert_luminance(const uint32_t *raw_rgbw, float *lux_rgbw); /* convert to lux */
+void convert_luminance(const uint32_t *raw_rgbw, double *lux_rgbw); /* convert to lux */
 
 #endif /* VEML6040_h */

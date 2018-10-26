@@ -25,13 +25,15 @@
 * Private stuff
 **/
 int i2c_file_handle;
+ERROR_CODE_T i2c_read(const uint8_t addr, uint16_t* data);
+ERROR_CODE_T i2c_write_byte(const uint8_t addr, const uint8_t data);
 
 
 /**
 * Initialízes the i2c interface and the veml6040 device
 * @public
 **/
-int veml6040_init() {
+ERROR_CODE_T veml6040_init(void) {
   i2c_file_handle = open (I2C_DEVICE, O_RDWR);
 
   if (i2c_file_handle < 0) {
@@ -190,11 +192,11 @@ ERROR_CODE_T sample_veml(uint32_t *raw_rgbw) {
 *                       values in lux after the function call.
 * @public
 **/
-void convert_luminance(const uint32_t *raw_rgbw, float *lux_rgbw) {
+void convert_luminance(const uint32_t *raw_rgbw, double *lux_rgbw) {
   uint8_t color;
 
   for (color=0; color<4; color++) {
-    lux_rgbw[color]=raw_rgbw[color]* LUX_PER_STEP;
+    lux_rgbw[color] = raw_rgbw[color] * LUX_PER_STEP;
   }
 
 }

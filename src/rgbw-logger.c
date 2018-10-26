@@ -1,5 +1,5 @@
 /**
-* This code can be seen as example code for the library I wrote for the 
+* This code can be seen as example code for the library I wrote for the
 * VEML6040 sensor from Vishay Semiconductors. This is a private project and
 * not related to Vishay Semiconductors.
 *
@@ -17,9 +17,15 @@
 #include "veml6040.h"
 
 
-void print_luminance() {
+/* Prototypes */
+void print_luminance(void);
+void *threadproc(void *arg);
+int main(int arcc, char **argv);
+
+
+void print_luminance(void) {
   uint32_t color_value[4];
-  float color_lux[4];
+  double color_lux[4];
   uint8_t color;
 
   sample_veml(color_value);
