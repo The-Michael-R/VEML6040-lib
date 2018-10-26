@@ -6,6 +6,7 @@
 #ifndef DEBUG_UTIL_H
 #define DEBUG_UTIL_H
 
+#include <stdio.h>
 
 #ifdef DEBUG
  #define DEBUG_PRINT(x)     printf(x);

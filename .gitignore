@@ -1,0 +1,6 @@
+*.[oa]
+*.out
+*~
+example
+*.h.gch
+._*

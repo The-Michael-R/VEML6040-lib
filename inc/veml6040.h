@@ -7,6 +7,9 @@
 #define VEML6040_h
 
 #include "stdint.h"
+#include "error_codes.h"
+#include "global_conf.h"
+#include "debug_util.h"
 
 /**
 * VEML6040 slave address
@@ -59,5 +62,14 @@
 #define VEML6040_CONF_AF     (1)
 #define VEML6040_CONF_SD     (0)
 
+#define LUX_PER_STEP 0.007865
+
+
+/**
+* Public functions
+**/
+int veml6040_init(); /* initializes the i2c and teh veml6040 */
+ERROR_CODE_T sample_veml(uint32_t *raw_rgbw); /* reading all channels */
+void convert_luminance(const uint32_t *raw_rgbw, float *lux_rgbw); /* convert to lux */
 
 #endif /* VEML6040_h */
