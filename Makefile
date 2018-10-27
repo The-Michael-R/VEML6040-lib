@@ -1,5 +1,5 @@
-CC         := /usr/bin/gcc
-CFLAGS     := -I./inc -Wall -O3 -pthread
+CC         := /usr/bin/cc
+CFLAGS     := -I./inc -Wall -Wstrict-prototypes -Wmissing-prototypes -Wshadow -Wconversion -O3 -pthread
 LDFLAGS    := -I./inc
 DEPENDFILE := .depend
 

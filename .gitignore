@@ -1,6 +1,7 @@
 *.[oa]
 *.out
 *~
-example
 *.h.gch
 ._*
+rgbw-logger
+logging-data.txt
