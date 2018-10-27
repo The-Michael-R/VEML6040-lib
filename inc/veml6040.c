@@ -136,51 +136,42 @@ ERROR_CODE_T i2c_write_byte(const uint8_t addr, const uint8_t data) {
 ERROR_CODE_T sample_veml(uint32_t *raw_rgbw) {
   ERROR_CODE_T error_code;
   uint8_t curr_gain;
-  uint16_t color_val[4];
-  uint8_t  color_gain[4];
   uint8_t color;
   uint8_t channels_done;
+  uint16_t value;
 
-  /*initialize variables */
-  curr_gain = 0;
   channels_done = 0;
-  for (color=0; color<4; color++) {
-    color_gain[color] = 5;
-  }
 
-  do {
-    /* start converting in single trigger mode */
+  for(curr_gain = 0; curr_gain < 6; curr_gain++) {
+
     error_code = i2c_write_byte(VEML6040_OFFSET_CONF, (curr_gain << VEML6040_CONF_IT) + (1 << VEML6040_CONF_AF) + (1 << VEML6040_CONF_TRIG));
     if (error_code) {
       return error_code;
     }
-    usleep((60000 << curr_gain)); /* 40ms for gain = 0 and doubles for every gain, but its not sufficient */
+    usleep((60000 << curr_gain) + 10000); /* 40ms for gain = 0 plus some margin */
 
     for (color = 0; color < 4; color++) {
-      if (color_gain[color] == 5) {
-        error_code = i2c_read(VEML6040_OFFSET_R_DATA + color, &color_val[color]);
+      if ((channels_done & (1 << color)) == 0) { /* read only the not finished channels */
+        error_code = i2c_read(VEML6040_OFFSET_R_DATA + color, &value);
         if (error_code) {
           return error_code;
         }
 
-        if (color_val[color] > 0x7f00) {
-          color_gain[color] = curr_gain;
-          channels_done ++;
+        raw_rgbw[color] = value << (5 - curr_gain);
+
+        if (value > 0x7fff) {
+          channels_done = channels_done | (1 << color);
+
+          if (channels_done == 0b1111) {
+            /* if all channels are done, do an early exit */
+            return _OK;
+          }
         }
       }
     }
-    curr_gain++;
-    if (curr_gain > 5) {
-      break;
-    }
-  }  while (channels_done != 4);
-
-  /* Apply the gain to the value to each channel */
-  for(color=0; color<4; color++) {
-    raw_rgbw[color] = color_val[color] << (5-color_gain[color]);
   }
 
-  return _OK;
+return _OK;
 }
 
 /**

@@ -41,7 +41,7 @@ void print_luminance(void) {
   }
   convert_luminance(color_value, color_lux);
   for (color = 0; color < 4; color++) {
-    printf (", %f", color_lux[color]);
+    printf (", %8.3f lux", color_lux[color]);
   }
 
 }
@@ -61,6 +61,7 @@ void *threadproc(void *arg)
 int main(int arcc, char **argv) {
   pthread_t tid;
   veml6040_init();
+
 
   pthread_create(&tid, NULL, &threadproc, NULL);
   while (pthread_join(tid,NULL)) {};
